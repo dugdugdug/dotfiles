@@ -65,6 +65,11 @@ NeoBundle 'basyura/unite-rails'
 " ctagsの自動生成
 NeoBundle 'alpaca-tc/alpaca_tags'
 
+" markdownファイルをブラウザで（ほぼ）ライブプレビュー
+NeoBundle 'plasticboy/vim-markdown'
+NeoBundle 'kannokanno/previm'
+NeoBundle 'tyru/open-browser.vim'
+
 " Ruby向けにendを自動挿入してくれる
 NeoBundle 'tpope/vim-endwise'
 
@@ -96,7 +101,41 @@ NeoBundle 'vim-css3-syntax'
 NeoBundle 'vim-javascript'
 NeoBundle 'html5.vim'
 
+" htmlのバリデート
+NeoBundle "hokaccha/vim-html5validator"
+
+" コーディング時間のログ計測
 NeoBundle 'wakatime/vim-wakatime'
+
+" 複数カーソル
+NeoBundle 'terryma/vim-multiple-cursors'
+
+" PHPのインデント設定
+NeoBundle '2072/PHP-Indenting-for-VIm'
+
+NeoBundleLazy 'leafgarland/typescript-vim', {
+\ 'autoload' : {
+\   'filetypes' : ['typescript'] }
+\}
+
+NeoBundleLazy 'jason0x43/vim-js-indent', {
+\ 'autoload' : {
+\   'filetypes' : ['javascript', 'typescript', 'html'],
+\}}
+let g:js_indent_typescript = 1
+
+NeoBundle 'TwitVim'
+
+" vimでファイルのリネーム
+NeoBundle 'vim-scripts/renamer.vim'
+
+" VimでPocketの操作
+NeoBundle 'mattn/webapi-vim'
+NeoBundle 'soramugi/pocket.vim'
+
+NeoBundleLazy 'vim-jp/cpp-vim', {
+            \ 'autoload' : {'filetypes' : 'cpp'}
+            \ }
 
 " Required:
 call neobundle#end()
@@ -125,25 +164,25 @@ if has('conceal')
 endif
 
 " Lightline Settings
-let g:lightline = {
-      \ 'colorscheme': 'wombat',
-      \ 'active': {
-      \   'left': [ [ 'mode', 'paste' ],
-      \             [ 'fugitive', 'readonly', 'filename', 'modified' ] ]
-      \ },
-      \ 'component': {
-      \   'readonly': '%{&filetype=="help"?"":&readonly?"⭤":""}',
-      \   'modified': '%{&filetype=="help"?"":&modified?"+":&modifiable?"":"-"}',
-      \   'fugitive': '%{exists("*fugitive#head")?fugitive#head():""}'
-      \ },
-      \ 'component_visible_condition': {
-      \   'readonly': '(&filetype!="help"&& &readonly)',
-      \   'modified': '(&filetype!="help"&&(&modified||!&modifiable))',
-      \   'fugitive': '(exists("*fugitive#head") && ""!=fugitive#head())'
-      \ },
-      \ 'separator': { 'left': '⮀', 'right': '⮂' },
-      \ 'subseparator': { 'left': '⮁', 'right': '⮃' }
-      \ }
+"let g:lightline = {
+"      \ 'colorscheme': 'wombat',
+"      \ 'active': {
+"      \   'left': [ [ 'mode', 'paste' ],
+"      \             [ 'fugitive', 'readonly', 'filename', 'modified' ] ]
+"      \ },
+"      \ 'component': {
+"      \   'readonly': '%{&filetype=="help"?"":&readonly?"⭤":""}',
+"      \   'modified': '%{&filetype=="help"?"":&modified?"+":&modifiable?"":"-"}',
+"      \   'fugitive': '%{exists("*fugitive#head")?fugitive#head():""}'
+"      \ },
+"      \ 'component_visible_condition': {
+"      \   'readonly': '(&filetype!="help"&& &readonly)',
+"      \   'modified': '(&filetype!="help"&&(&modified||!&modifiable))',
+"      \   'fugitive': '(exists("*fugitive#head") && ""!=fugitive#head())'
+"      \ },
+"      \ 'separator': { 'left': '⮀', 'right': '⮂' },
+"      \ 'subseparator': { 'left': '⮁', 'right': '⮃' }
+"      \ }
 
 
 " NeoComplete
@@ -168,10 +207,10 @@ inoremap <expr><C-l>     neocomplcache#complete_common_string()
 
 " Recommended key-mappings.
 " <CR>: close popup and save indent.
-inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-function! s:my_cr_function()
-  return neocomplcache#smart_close_popup() . "\<CR>"
-endfunction
+" inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+" function! s:my_cr_function()
+"   return neocomplcache#smart_close_popup() . "\<CR>"
+" endfunction
 " <TAB>: completion.
 inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 " <C-h>, <BS>: close popup and delete backword char.
@@ -264,6 +303,21 @@ set whichwrap=b,s,h,l,<,>,[,]
 " アンドゥファイルの保存先を変更
 set undodir=~/.vim/undo/
 
+"カーソルを表示行で移動する。物理行移動は<C-n>,<C-p>
+nnoremap j gj
+nnoremap k gk
+nnoremap <Down> gj
+nnoremap <Up>   gk
+
+" ノーマルモード時のみ;を:として認識
+nnoremap ; :
+
+" 挿入モードでのカーソル移動
+inoremap <C-j> <Down>
+inoremap <C-k> <Up>
+inoremap <C-h> <Left>
+inoremap <C-l> <Right>
+
 """"""""""""""""""""""""""""""
 " 全角スペースの表示
 """"""""""""""""""""""""""""""
@@ -284,9 +338,9 @@ endif
 """"""""""""""""""""""""""""""
 " 自動的に閉じ括弧を入力
 """"""""""""""""""""""""""""""
-imap { {}<LEFT>
-imap [ []<LEFT>
-imap ( ()<LEFT>
+" imap { {}<LEFT>
+" imap [ []<LEFT>
+" imap ( ()<LEFT>
 """"""""""""""""""""""""""""""
 
 """"""""""""""""""""""""""""""
@@ -312,7 +366,7 @@ augroup vimrc-auto-mkdir  " {{{
 augroup END  " }}}
 
 " 行末の不要なスペースを保存時に削除
-" autocmd BufWritePre * :%s/\s\+$//ge
+autocmd BufWritePre * :%s/\s\+$//ge
 
 " Vim表示内にボールドを許可
 let g:enable_bold_font = 1
@@ -336,13 +390,41 @@ map <silent> [Tag]p :tabprevious<CR>
 " tp 前のタブ
 
 " 使用フォント
-set guifont=MigMix_1M:h14
+set guifont=Osaka:h14
 
 " スクロールの遅延描画
 set lazyredraw
 
 " クリップボードを使用してのコピペを可能に
 set clipboard=unnamed,autoselect
+
+" スワップファイルを生成しない
+set noswapfile
+" バックアップファイルを生成しない
+set nobackup
+
+" .や::を入力したときにオムニ補完が有効になるようにする
+if !exists('g:neocomplete#force_omni_input_patterns')
+  let g:neocomplete#force_omni_input_patterns = {}
+endif
+let g:neocomplete#force_omni_input_patterns.ruby = '[^. *\t]\.\w*\|\h\w*::'
+
+" 環境変数RSENSE_HOMEに'/usr/local/bin/rsense'を指定しても動く
+let g:neocomplete#sources#rsense#home_directory = '/usr/local/bin/rsense'
+
+"------------------------------------
+" MiniBufExplorer
+"------------------------------------
+"set minibfexp
+let g:miniBufExplMapWindowNavVim=1 "hjklで移動
+let g:miniBufExplSplitBelow=0  " Put new window above
+let g:miniBufExplMapWindowNavArrows=1
+let g:miniBufExplMapCTabSwitchBufs=1
+let g:miniBufExplModSelTarget=1
+let g:miniBufExplSplitToEdge=1
+let g:miniBufExplMaxSize = 10
+
+
 
 " スワップファイルを生成しない
 set noswapfile
@@ -393,3 +475,93 @@ syn keyword htmlArg contained sizes scoped async reversed sandbox srcdoc
 syn keyword htmlArg contained hidden role
 syn match   htmlArg "\<\(aria-[\-a-zA-Z0-9_]\+\)=" contained
 syn match   htmlArg contained "\s*data-[-a-zA-Z0-9_]\+"
+
+let s:i = 0
+let s:s = 10
+
+function! s:byonbyon()
+  let &columns = s:w + float2nr(cos(3.141592*(0.0 + s:i * s:s)/180.0) * 10)
+  let &lines = s:h + float2nr(sin(3.141592*(0.0 + s:i * s:s)/180.0) * 5)
+  let s:i += 1
+  call feedkeys(mode() ==# "i" ? "\<C-g>\<ESC>" : "g\<ESC>", "n")
+endfunction
+
+function! s:stop_byonbyon()
+  augroup ByonByon
+    autocmd!
+  augroup END
+endfunction
+
+function! s:start_byonbyon()
+  let s:w = &columns
+  let s:h = &lines
+  set lazyredraw updatetime=10
+  augroup ByonByon
+    autocmd!
+    autocmd CursorHold,CursorHoldI * call s:byonbyon()
+  augroup END
+  command! StopByonByon call <SID>stop_byonbyon()
+endfunction
+
+"自動文字数カウント
+augroup WordCount
+    autocmd!
+    autocmd BufWinEnter,InsertLeave,CursorHold * call WordCount('char')
+augroup END
+let s:WordCountStr = ''
+let s:WordCountDict = {'word': 2, 'char': 3, 'byte': 4}
+function! WordCount(...)
+    if a:0 == 0
+        return s:WordCountStr
+    endif
+    let cidx = 3
+    silent! let cidx = s:WordCountDict[a:1]
+    let s:WordCountStr = ''
+    let s:saved_status = v:statusmsg
+    exec "silent normal! g\<c-g>"
+    if v:statusmsg !~ '^--'
+        let str = ''
+        silent! let str = split(v:statusmsg, ';')[cidx]
+        let cur = str2nr(matchstr(str, '\d\+'))
+        let end = str2nr(matchstr(str, '\d\+\s*$'))
+        if a:1 == 'char'
+            " ここで(改行コード数*改行コードサイズ)を'g<C-g>'の文字数から引く
+            let cr = &ff == 'dos' ? 2 : 1
+            let cur -= cr * (line('.') - 1)
+            let end -= cr * line('$')
+        endif
+        let s:WordCountStr = printf('%d/%d', cur, end)
+    endif
+    let v:statusmsg = s:saved_status
+    return s:WordCountStr
+endfunction
+
+command! StartByonByon call <SID>start_byonbyon()
+
+" Vimの戦闘力を計測
+function! Scouter(file, ...)
+  let pat = '^\s*$\|^\s*"'
+  let lines = readfile(a:file)
+  if !a:0 || !a:1
+    let lines = split(substitute(join(lines, "\n"), '\n\s*\\', '', 'g'), "\n")
+  endif
+  return len(filter(lines,'v:val !~ pat'))
+endfunction
+command! -bar -bang -nargs=? -complete=file Scouter
+\        echo Scouter(empty(<q-args>) ? $MYVIMRC : expand(<q-args>), <bang>0)
+command! -bar -bang -nargs=? -complete=file GScouter
+\        echo Scouter(empty(<q-args>) ? $MYGVIMRC : expand(<q-args>), <bang>0)
+
+" Twitterクライアント化
+let twitvim_browser_cmd = 'open' " for Mac
+let twitvim_force_ssl = 1
+let twitvim_count = 40
+
+set fileencodings=utf-8,euc-jp,sjis,cp932,iso-2022-jp
+
+" 折りたたみの設定
+set foldmethod=syntax
+let perl_fold=1
+set foldlevel=100 "Don't autofold anything
+
+au BufNewFile,BufRead *.ejs set filetype=html
